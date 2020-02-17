@@ -103,25 +103,31 @@ master.map.init = function(geojson){
                 console.log(name + ' does not exist in DXY data.');
             }
             return d;
+        })
+        .attr('fill', function(d){
+            let name = d.properties.name;
+            if(d.available){
+                let count = master.level.getCount(name, master.map.type);
+                return master.map.colorScale(count);
+            }
+            else{
+                return 'gray';
+            }
         });
     
     // set utilities, used by other charts
     this.setUtilities();
-    // add color
-    this.updateColor(false);
 };
 
 /**
  * color the map according to the "caseType" of each region
- * @param {boolean} transition - controls whether a transition is rendered
+ * @param {float} duration - the duration of transition
  * time is determined by master.date.now
  */
-master.map.updateColor = function(transition){
-    let regions = this.regions;
-    if(transition){
-        regions = regions.transition();
-    }
-    regions.attr('fill', function(d){
+master.map.update = function(duration){
+    this.regions
+        .transition(duration)
+        .attr('fill', function(d){
         let name = d.properties.name;
         if(d.available){
             let count = master.level.getCount(name, master.map.type);

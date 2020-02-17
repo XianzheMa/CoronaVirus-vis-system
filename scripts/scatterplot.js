@@ -91,3 +91,25 @@ master.scatterplot.init = function(){
         .style('stroke', 'black')
         .style('stroke-width', 0.75);
 }
+
+/**
+ * move the points according to master.date.now
+ * @param {float} duration duration of the transition, 0 means no transition
+ */
+master.scatterplot.update = function(duration){
+    let points = d3.select('#scatterPointGroup')
+        .selectAll('circle')
+        .transition(duration)
+        .attr('cx', function(name){
+            let xCount = master.level.getCount(name, master.scatterplot.xType);
+            return master.scatterplot.xScale(xCount);
+        })
+        .attr('cy', function(name){
+            let yCount = master.level.getCount(name, master.scatterplot.yType);
+            return master.scatterplot.yScale(yCount);
+        })
+        .attr('fill', function(name){
+            let count = master.level.getCount(name, master.map.type);
+            return master.map.colorScale(count);
+        });
+}

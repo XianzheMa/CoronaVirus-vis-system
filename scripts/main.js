@@ -4,7 +4,7 @@
  * set up master.level accroding to name
  * @param {string} name the current name of this level
  */
-master.level.update = function(name){
+master.level.changeLevel = function(name){
     master.level.name = name;
     if(name === 'China'){
         master.level.data = master.data;
@@ -42,13 +42,16 @@ master.main = function(error, data){
     master.date.length = data[1]['Hubei']['cases'].length;
     master.date.startDate = data[1]['Hubei']['cases'][0]['time'];
     master.date.endDate = data[1]['Hubei']['cases'][master.date.length - 1]['time'];
-    // master.date.now should be within [0, length - 1]. It facilitates other widgets get the correct time
-    master.date.now = 2;
+    master.date.currentStart = 0;
+    master.date.currentEnd = master.date.length - 1;
+    // master.date.now should be within [currentStart, currentEnd]. It facilitates other widgets getting the correct time
+    master.date.now = master.date.currentStart;
     // master.level decides which level of data to show
-    master.level.update('China');
+    master.level.changeLevel('China');
     
     master.map.init(data[0]);
     master.scatterplot.init();
+    master.control.init();
 };
 
 

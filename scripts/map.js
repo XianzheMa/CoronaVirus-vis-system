@@ -2,8 +2,8 @@
  * the margin of the svg element #map
  */
 master.map.margin = {
-    top:30,
-    bottom:30,
+    top:15,
+    bottom:15,
     left:30,
     right:30
 };
@@ -72,12 +72,12 @@ master.map.init = function(geojson){
     this.setColorScale();
     let mapSvg = d3.select("#map");
     const boundingBox = mapSvg.node().getBoundingClientRect();
-    const svgWidth = boundingBox.width;
-    const svgHeight = boundingBox.height;
+    const AvailableWidth = boundingBox.width - this.margin.left - this.margin.right;
+    const AvailableHeight = boundingBox.height - this.margin.top - this.margin.bottom;
 
 
     let projection = d3.geoMercator()
-        .fitSize([svgWidth, svgHeight], geojson);
+        .fitSize([AvailableWidth, AvailableHeight], geojson);
     let path = d3.geoPath()
         .projection(projection);
     

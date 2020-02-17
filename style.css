@@ -5,6 +5,8 @@ body, html {
 
 #scatterplot{
     float: right;
+    width: 50%;
+    height: 50%;
 }
 
 #map{
@@ -14,6 +16,6 @@ body, html {
 }
 
 #mapRegionGroup{
-    stroke: black;
+    stroke:gray;
     stroke-width: 0.75;
 }

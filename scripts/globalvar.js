@@ -1,8 +1,9 @@
 
 master = {}
-master.getCount = function(){};
 
 master.date = {};
+master.date.init = function(){};
+master.date.dateArray = [];
 master.date.length = null;
 master.date.startDate = null;
 master.date.endDate = null;
@@ -12,12 +13,13 @@ master.date.currentEnd = null;
 
 master.level = {};
 master.level.name = null;
-master.level.data = null;
+master.level.data = {};
 master.level.changeLevel = function(){};
-master.level.getCount = function(){};
+
 
 master.utils = {};
 master.utils.normalize = function(){};
+master.utils.getCount = function(){};
 
 master.control = {};
 master.control.init = function(){};
@@ -49,3 +51,8 @@ master.scatterplot.yType = null;
 
 master.curvechart = {};
 master.curvechart.init = function(){};
+master.curvechart.update = function(){};
+master.curvechart.type = null;
+master.curvechart.xScale = null;
+master.curvechart.yScale = null;
+master.curvechart.setPathsPoints = function(){};

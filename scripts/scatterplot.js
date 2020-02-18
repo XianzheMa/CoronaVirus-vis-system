@@ -74,15 +74,15 @@ master.scatterplot.init = function(){
         .attr('opacity', 1)
         .attr('r', this.RADIUS)
         .attr('cx', function(name){
-            let xCount = master.level.getCount(name, master.scatterplot.xType);
+            let xCount = master.utils.getCount(name, master.scatterplot.xType);
             return master.scatterplot.xScale(xCount);
         })
         .attr('cy', function(name){
-            let yCount = master.level.getCount(name, master.scatterplot.yType);
+            let yCount = master.utils.getCount(name, master.scatterplot.yType);
             return master.scatterplot.yScale(yCount);
         })
         .attr('fill', function(name){
-            let count = master.level.getCount(name, master.map.type);
+            let count = master.utils.getCount(name, master.map.type);
             return master.map.colorScale(count);
         })
         .attr('class', function(name){
@@ -99,17 +99,18 @@ master.scatterplot.init = function(){
 master.scatterplot.update = function(duration){
     let points = d3.select('#scatterPointGroup')
         .selectAll('circle')
-        .transition(duration)
+        .transition()
+        .duration(duration)
         .attr('cx', function(name){
-            let xCount = master.level.getCount(name, master.scatterplot.xType);
+            let xCount = master.utils.getCount(name, master.scatterplot.xType);
             return master.scatterplot.xScale(xCount);
         })
         .attr('cy', function(name){
-            let yCount = master.level.getCount(name, master.scatterplot.yType);
+            let yCount = master.utils.getCount(name, master.scatterplot.yType);
             return master.scatterplot.yScale(yCount);
         })
         .attr('fill', function(name){
-            let count = master.level.getCount(name, master.map.type);
+            let count = master.utils.getCount(name, master.map.type);
             return master.map.colorScale(count);
         });
 }

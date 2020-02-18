@@ -18,10 +18,18 @@ master.level.changeLevel = function(name){
  * get the count of the type in the region corresponding to the name.
  * date is determined by master.level.now
  * @param {string} name the name of the region
- * @param {string} type one of "confirmed", "cured", "suspected", "dead"
+ * @param {string} type one of "confirmed", "cured", "suspected", "dead" and the rates of each one
+ * @param {int} dateIndex defaults to master.date.now. Controls which date the count is at.
+ * If dateIndex is out of available range [0, length - 1], then returns the startIndex/endIndex's value.
  */
-master.level.getCount = function(name, type){
-    return this.data[name].cases[master.date.now][type];
+master.utils.getCount = function(name, type, dateIndex = master.date.now){
+    if(dateIndex < 0){
+        dateIndex = 0;
+    }
+    else if(dateIndex > master.date.length - 1){
+        dateIndex = master.date.length - 1;
+    }
+    return master.level.data[name].cases[dateIndex][type];
 };
 
 /**
@@ -31,6 +39,20 @@ master.utils.normalize = function(name){
     return name.replace(/ /g, '_').replace(/\//g, '_');
 };
 
+master.date.init = function(){
+    this.length = master.data['Hubei'].cases.length;
+    
+    this.dateArray = [];
+    for(let i = 0; i < master.date.length; i++){
+        this.dateArray.push(master.data['Hubei'].cases[i].time);
+    }
+    this.currentStart = 0;
+    this.currentEnd = master.date.length - 1;
+    // master.date.now should be within [currentStart, currentEnd]. It facilitates other widgets getting the correct time
+    this.now = master.date.currentStart;
+};
+
+
 master.main = function(error, data){
     "use strict";
     if(error) throw error;
@@ -38,19 +60,13 @@ master.main = function(error, data){
     master.preprocess(data[1]);
     master.data = data[1];
 
-    // set its start date and end date
-    master.date.length = data[1]['Hubei']['cases'].length;
-    master.date.startDate = data[1]['Hubei']['cases'][0]['time'];
-    master.date.endDate = data[1]['Hubei']['cases'][master.date.length - 1]['time'];
-    master.date.currentStart = 0;
-    master.date.currentEnd = master.date.length - 1;
-    // master.date.now should be within [currentStart, currentEnd]. It facilitates other widgets getting the correct time
-    master.date.now = master.date.currentStart;
+    master.date.init();
+
     // master.level decides which level of data to show
     master.level.changeLevel('China');
-    
     master.map.init(data[0]);
     master.scatterplot.init();
+    master.curvechart.init();
     master.control.init();
 };
 

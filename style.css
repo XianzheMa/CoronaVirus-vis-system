@@ -39,3 +39,9 @@ body, html {
 .control #startTransition {
     width: 100%;
 }
+
+#strokeGroup{
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+}

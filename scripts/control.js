@@ -1,6 +1,6 @@
 
 master.control.init = function(){
-    this.IN_DURATION = 950;
+    this.IN_DURATION = 990;
     this.EX_DURATION = 1000;
     d3.select('#startTransition')
         .on('click', function(){
@@ -26,6 +26,7 @@ master.control.update = function(){
         master.date.now = master.date.now + 1;
         master.map.update(this.IN_DURATION);
         master.scatterplot.update(this.IN_DURATION);
+        master.curvechart.update(this.IN_DURATION);
     }
     else{
         document.getElementById('startTransition').disabled = false;

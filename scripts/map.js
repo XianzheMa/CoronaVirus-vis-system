@@ -57,7 +57,11 @@ master.map.setRange = function(){
         return range;
     }
     // set range for each type
-    for(const type of ['confirmed', 'suspected', 'cured', 'dead']){
+    let origTypes = ['confirmed', 'suspected', 'cured', 'dead'];
+    for(const type of origTypes.slice()){
+        origTypes.push(type + 'Rate');
+    }
+    for(const type of origTypes){
         this.range[type] = getRange(type);
     }
 }
@@ -107,7 +111,7 @@ master.map.init = function(geojson){
         .attr('fill', function(d){
             let name = d.properties.name;
             if(d.available){
-                let count = master.level.getCount(name, master.map.type);
+                let count = master.utils.getCount(name, master.map.type);
                 return master.map.colorScale(count);
             }
             else{
@@ -126,11 +130,12 @@ master.map.init = function(geojson){
  */
 master.map.update = function(duration){
     this.regions
-        .transition(duration)
+        .transition()
+        .duration(duration)
         .attr('fill', function(d){
         let name = d.properties.name;
         if(d.available){
-            let count = master.level.getCount(name, master.map.type);
+            let count = master.utils.getCount(name, master.map.type);
             return master.map.colorScale(count);
         }
         else{

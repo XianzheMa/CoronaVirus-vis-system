@@ -15,6 +15,8 @@ master.curvechart.init = function(){
     'use strict';
     this.type = 'confirmedRate';
     let curveSvg = d3.select("#curvechart");
+    // clear previous children
+    curveSvg.selectAll("*").remove();
     const boundingBox = curveSvg.node().getBoundingClientRect();
     let svgWidth = boundingBox.width;
     let svgHeight = boundingBox.height;
@@ -46,21 +48,6 @@ master.curvechart.init = function(){
     // set up initial points
     // TODO: do it later
     this.setPathsPoints();
-    // let points = [[0, 0], [100, 200], [400, 400], [400, 800]];
-    // d3.select('#strokeGroup')
-    //     .append('path')
-    //     .datum(points)
-    //     //.attr('stroke', 'steelblue')
-    //     // .attr('fill', 'none')
-    //     // .attr('stroke-width', '2px')
-    //     .attr('d', d3.line().curve(d3.curveCatmullRomOpen))
-    //     .transition()
-    //     .attrTween('stroke-dasharray', tweenDash);
-
-    // function tweenDash(){
-    //     let l = this.getTotalLength();
-    //     return d3.interpolateString('0 ' + l, l + ' ' + l);
-    // }
 }
 
 /**

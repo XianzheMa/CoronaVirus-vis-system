@@ -1,4 +1,3 @@
-// TODO: difference between attr and style?
 
 /**
  * set up master.level accroding to name
@@ -10,7 +9,7 @@ master.level.changeLevel = function(name){
         master.level.data = master.data;
     }
     else{
-        master.level.data = master[name].cities;
+        master.level.data = master.data[name].cities;
     }
 };
 
@@ -18,7 +17,7 @@ master.level.changeLevel = function(name){
  * get the count of the type in the region corresponding to the name.
  * date is determined by master.level.now
  * @param {string} name the name of the region
- * @param {string} type one of "confirmed", "cured", "suspected", "dead" and the rates of each one
+ * @param {string} type one of "confirmed", "cured", "suspected", "dead" and the rate of each one
  * @param {int} dateIndex defaults to master.date.now. Controls which date the count is at.
  * If dateIndex is out of available range [0, length - 1], then returns the startIndex/endIndex's value.
  */
@@ -113,6 +112,6 @@ master.preprocess = function(data){
 };
 
 d3.queue(1)
-    .defer(d3.json, "./data/geojson/China.geo.json")
+    .defer(d3.json, "./data/geojson/Hubei.geo.json")
     .defer(d3.json, "./data/DXYArea_short.json")
     .awaitAll(master.main);

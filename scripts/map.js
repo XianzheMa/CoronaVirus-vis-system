@@ -15,6 +15,7 @@ master.map.setColorScale = function(){
     if(master.level.name === 'China'){
         // in this case we don't need to 'calculate' the best scale
         // because it has been well proposed
+        // FIXME: use this color scale only when Hubei is included
         let colorThresholds = [1, 10, 100, 500, 1000, 10000];
         this.colorScale = d3.scaleThreshold()
             .domain(colorThresholds)
@@ -45,10 +46,12 @@ master.map.setUtilities = function(){
  * set master.map.range, which is used by other charts
  */
 master.map.setRange = function(){
+    let currentStart = master.date.currentStart;
+    let currentEnd = master.date.currentEnd;
     let getRange = function(type){
         let range = [0, 0];
         for(const name of master.map.availableNames){
-            let localRange = d3.extent(master.level.data[name].cases, function(eachCase){
+            let localRange = d3.extent(master.level.data[name].cases.slice(currentStart, currentEnd + 1), function(eachCase){
                 return eachCase[type];
             });
             range[0] = Math.min(range[0], localRange[0]);
@@ -75,6 +78,8 @@ master.map.init = function(geojson){
     this.type = 'confirmed';
     this.setColorScale();
     let mapSvg = d3.select("#map");
+    // clear previous configured children
+    mapSvg.selectAll("*").remove();
     const boundingBox = mapSvg.node().getBoundingClientRect();
     const AvailableWidth = boundingBox.width - this.margin.left - this.margin.right;
     const AvailableHeight = boundingBox.height - this.margin.top - this.margin.bottom;

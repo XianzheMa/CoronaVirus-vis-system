@@ -58,6 +58,8 @@ master.scatterplot.init = function(){
     this.xType = 'confirmed';
     this.yType = 'cured';
     let scatterSvg = d3.select("#scatterplot");
+    // clear previous children
+    scatterSvg.selectAll("*").remove();
     const boundingBox = scatterSvg.node().getBoundingClientRect();
     this.svgWidth = boundingBox.width;
     this.svgHeight = boundingBox.height;

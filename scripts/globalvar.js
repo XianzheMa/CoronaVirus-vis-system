@@ -1,6 +1,6 @@
 
 master = {}
-
+master.DIM_OPACITY = null;
 master.reset = function(){};
 
 
@@ -26,6 +26,10 @@ master.utils.getCount = function(){};
 master.utils.parseTime = function(){};
 master.utils.time2string = function(){};
 master.utils.id2string = function(){};
+master.utils.initSelectedNames = function(){};
+master.utils.selectedNames = new Set();
+master.utils.setRange = function(){};
+master.utils.range = {};
 
 master.control = {};
 master.control.init = function(){};
@@ -41,11 +45,9 @@ master.map.margin = {};
 master.map.init = function(){};
 master.map.setColorScale = function(){};
 master.map.update = function(){};
-master.map.setAvailableNames = function(){};
-master.map.setRange = function(){};
-master.map.availableNames = [];
+master.map.setInteraction = function(){};
+master.map.mouseOverMapEle = function(){};
 master.map.colorScale = null;
-master.map.range = {};
 
 master.scatterplot = {};
 master.scatterplot.margin = {};
@@ -53,6 +55,7 @@ master.scatterplot.init = function(){};
 master.scatterplot.setScale = function(){};
 master.scatterplot.setAxes = function(){};
 master.scatterplot.update = function(){};
+master.scatterplot.mouseOverScatterEle = function(){};
 master.scatterplot.xScale = null;
 master.scatterplot.yScale = null;
 master.scatterplot.xType = null;

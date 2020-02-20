@@ -63,3 +63,13 @@ select {
     float: auto;
 }
 
+.tooltipText {
+    text-anchor: middle;
+    font-size: 11px;
+    fill: white;
+    opacity: 0.9;
+}
+
+.tooltip{
+    pointer-events: none;
+}

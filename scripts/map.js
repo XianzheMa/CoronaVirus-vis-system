@@ -23,51 +23,9 @@ master.map.setColorScale = function(){
     }
 }
 
-/**
- * set master.map.availableNames
- */
-master.map.setAvailableNames = function(){
-    this.availableNames = [];
-    this.regions.each(function(d){
-        if(d.available){
-            master.map.availableNames.push(d.properties.name);
-        }
-    });
-}
 
-/**
- * a pipline for utility setup, including avaliableNames, range
- */
-master.map.setUtilities = function(){
-    this.setAvailableNames();
-    this.setRange();
-}
-/**
- * set master.map.range, which is used by other charts
- */
-master.map.setRange = function(){
-    let currentStart = master.date.currentStart;
-    let currentEnd = master.date.currentEnd;
-    let getRange = function(type){
-        let range = [0, 0];
-        for(const name of master.map.availableNames){
-            let localRange = d3.extent(master.level.data[name].cases.slice(currentStart, currentEnd + 1), function(eachCase){
-                return eachCase[type];
-            });
-            range[0] = Math.min(range[0], localRange[0]);
-            range[1] = Math.max(range[1], localRange[1]);
-        }
-        return range;
-    }
-    // set range for each type
-    let origTypes = ['confirmed', 'suspected', 'cured', 'dead'];
-    for(const type of origTypes.slice()){
-        origTypes.push(type + 'Rate');
-    }
-    for(const type of origTypes){
-        this.range[type] = getRange(type);
-    }
-}
+
+
 /**
  * initialize a map on the svg element #map.
  * @param {object} geojson
@@ -121,14 +79,115 @@ master.map.init = function(){
                 return master.map.colorScale(count);
             }
             else{
-                return 'gray';
+                return 'lightgray';
             }
         });
-    
-    // set utilities, used by other charts
-    this.setUtilities();
+     // set interaction
+     this.setInteraction();
 };
 
+// ! should only be used as event handlers, since 'this' is not used traditionally.
+master.map.mouseOverMapEle = function(datum){
+    let name = datum.properties.name;
+    let isSelected = master.utils.selectedNames.has(name);
+    if(isSelected === false){
+        // if it is not selected, no need to do anything special, except for those unavailable regions
+        if(datum.available){
+            return;
+        }
+    }
+    let registerCall = true;
+    if(datum === null){
+        // called by other mouseOver functions
+        registerCall = false;
+        datum = d3.select(this).datum();
+    }
+    const bbox = this.getBoundingClientRect();
+    const parentBbox = document.getElementById("map").getBoundingClientRect();
+    let textArray = [];
+    // name
+    textArray.push(datum.properties.name);
+
+    if(datum.available === true){
+        textArray.push(master.utils.readableType(master.map.type) + ": " + master.utils.getCount(name, master.map.type));
+    }
+    else{
+        textArray.push(master.utils.readableType(master.map.type) + ": unavailable");
+    }
+    master.utils.tooltip(d3.select('#map'), bbox, parentBbox, textArray);
+    // change other regions' opacity
+    const that = this;
+    d3.select("#mapRegionGroup")
+            .selectAll("path")
+            .filter(function(d){
+                if(this === that){
+                    return false;
+                }
+                else if(d.available === false){
+                    return false;
+                }
+                return true;
+            })
+            .transition()
+            .attr("opacity", master.DIM_OPACITY);
+    if(registerCall){
+        // only when it is selected & available could it be linked to others
+        if(datum.available){
+            const targetClass = '.' + master.utils.normalize(name);
+            master.scatterplot.mouseOverScatterEle.call(d3.select('#scatterplot').select(targetClass).node(), null);
+        }
+    }
+}
+master.map.setInteraction = function(){
+    d3.select('#mapRegionGroup')
+        .selectAll('path')
+        .on('mouseover', this.mouseOverMapEle)
+        .on('mouseout', master.utils.mouseOut)
+        .on('click', mouseClick);
+    
+    function mouseClick(datum){
+        if(datum.available === false){
+            // it cannot be selected
+            return;
+        }
+        let name = datum.properties.name;
+        let selectedSet = master.utils.selectedNames;
+        let isSelected = selectedSet.has(name);
+        if(isSelected === true){
+            // deselect it
+            selectedSet.delete(name);
+            d3.select(this)
+                .transition()
+                .attr('opacity', master.DIM_OPACITY);
+            master.scatterplot.init();
+            master.curvechart.init();
+            master.utils.mouseOut();
+            // light selected up
+            const that = this;
+            d3.select('#mapRegionGroup')
+                .selectAll('path')
+                .filter(function(d){
+                    let name = d.properties.name;
+                    if(selectedSet.has(name)){
+                        return true;
+                    }
+                    return false;
+                })
+                .transition()
+                .attr('opacity', 1);
+        }
+        else{
+            // select it
+            selectedSet.add(name);
+            d3.select(this)
+                .attr('opacity', 1);
+            master.scatterplot.init();
+            master.curvechart.init();
+            // mouse over it
+            master.map.mouseOverMapEle.call(this, datum);
+        }
+    }
+};
 /**
  * color the map according to the "caseType" of each region
  * @param {float} duration - the duration of transition
@@ -145,7 +204,7 @@ master.map.update = function(duration){
             return master.map.colorScale(count);
         }
         else{
-            return 'gray';
+            return 'lightgray';
         }
     });
 }

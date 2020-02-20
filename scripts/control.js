@@ -77,6 +77,9 @@ master.control.changeList = function(symbol){
  * begin a new period of transition according to master.date.startDate and master.date.endDate
  */
 master.control.beginTransition = function(){
+    // block pointer event
+    d3.selectAll('svg')
+        .style('pointer-events', 'none');
     window.dataUpdatingInterval = window.setInterval(function(){
         master.control.update();
     }, this.EX_DURATION);
@@ -97,5 +100,9 @@ master.control.update = function(){
     else{
         document.getElementById('startTransition').disabled = false;
         window.clearInterval(window.dataUpdatingInterval);
+        // restore pointer events
+        d3.selectAll('svg')
+            .style('pointer-events', 'auto');
+        // auto means the element behaves as if it were not specified
     }
 };

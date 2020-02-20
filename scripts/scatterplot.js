@@ -4,14 +4,14 @@
 master.scatterplot.margin = {
     top:30,
     bottom:30,
-    left:30,
-    right:30
+    left:60,
+    right:60
 };
 
 master.scatterplot.setScale = function(){
     if(master.level.name === 'China'){
-        let xDomain = master.map.range[this.xType];
-        let yDomain = master.map.range[this.yType];
+        let xDomain = master.utils.range[this.xType];
+        let yDomain = master.utils.range[this.yType];
         xDomain[0] = 1; yDomain[0] = 1;
         this.xScale = d3.scaleLog()
             .domain(xDomain)
@@ -44,11 +44,18 @@ master.scatterplot.setAxes = function(scatterSvg){
     scatterSvg.append('g')
         .attr('id', 'scatter-xAxis')
         .attr('transform', 'translate(' + this.margin.left + "," + (this.svgHeight - this.margin.bottom) + ")")
-        .call(xAxis);
+        .call(xAxis)
+        .select('.tick')
+        .select('text')
+        .text('<=1');
     scatterSvg.append('g')
         .attr('id', 'scatter-yAxis')
         .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
-        .call(yAxis);
+        .call(yAxis)
+        .select('.tick')
+        .select('text')
+        .text('<=1');
+    
 }
 
 
@@ -65,12 +72,11 @@ master.scatterplot.init = function(){
     this.svgHeight = boundingBox.height;
     this.setScale();
     this.setAxes(scatterSvg);
-    
     scatterSvg.append('g')
         .attr('id', 'scatterPointGroup')
         .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
         .selectAll('circle')
-        .data(master.map.availableNames)
+        .data(Array.from(master.utils.selectedNames))
         .enter()
         .append('circle')
         .attr('opacity', 1)
@@ -91,9 +97,48 @@ master.scatterplot.init = function(){
             return master.utils.normalize(name);
         })
         .style('stroke', 'black')
-        .style('stroke-width', 0.75);
+        .style('stroke-width', 0.75)
+        .on('mouseover', this.mouseOverScatterEle)
+        .on('mouseout', master.utils.mouseOut);
+    
 }
 
+/**
+ * ! this method should only be used as an event handler, because the meaning of this is different
+ */
+master.scatterplot.mouseOverScatterEle = function(name){
+    let registerCall = true;
+    if(name === null){
+        // called by other mouseOver functions
+        registerCall = false;
+        name = d3.select(this).datum();
+    }
+    // put this circle on the top
+    d3.select(this).raise();
+    const bbox = this.getBoundingClientRect();
+    const parentBbox = document.getElementById('scatterplot').getBoundingClientRect();
+    let textArray = [];
+    textArray.push(name);
+    textArray.push(master.utils.readableType(master.scatterplot.xType) + ": " + master.utils.getCount(name, master.scatterplot.xType));
+    textArray.push(master.utils.readableType(master.scatterplot.yType) + ": " + master.utils.getCount(name, master.scatterplot.yType));
+    master.utils.tooltip(d3.select('#scatterplot'), bbox, parentBbox, textArray);
+    // change other circles' opacity
+    const that = this;
+    d3.select('#scatterPointGroup')
+        .selectAll('circle')
+        .filter(function(d){
+            if(this === that){
+                return false;
+            }
+            return true;
+        })
+        .transition()
+        .attr('opacity', master.DIM_OPACITY);
+    if(registerCall){
+        const targetClass = '.' + master.utils.normalize(name);
+        master.map.mouseOverMapEle.call(d3.select('#map').select(targetClass).node(), null);
+    }
+}
 /**
  * move the points according to master.date.now
  * @param {float} duration duration of the transition, 0 means no transition

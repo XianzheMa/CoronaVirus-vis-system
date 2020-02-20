@@ -13,30 +13,6 @@ master.level.changeLevel = function(name){
     }
 };
 
-/**
- * get the count of the type in the region corresponding to the name.
- * date is determined by master.level.now
- * @param {string} name the name of the region
- * @param {string} type one of "confirmed", "cured", "suspected", "dead" and the rate of each one
- * @param {int} dateIndex defaults to master.date.now. Controls which date the count is at.
- * If dateIndex is out of available range [0, length - 1], then returns the startIndex/endIndex's value.
- */
-master.utils.getCount = function(name, type, dateIndex = master.date.now){
-    if(dateIndex < 0){
-        dateIndex = 0;
-    }
-    else if(dateIndex > master.date.length - 1){
-        dateIndex = master.date.length - 1;
-    }
-    return master.level.data[name].cases[dateIndex][type];
-};
-
-/**
- * normalize the name (replace unsupported chars) so that it can be used as class name
- */
-master.utils.normalize = function(name){
-    return name.replace(/ /g, '_').replace(/\//g, '_');
-};
 
 master.date.init = function(){
     this.length = master.data['Hubei'].cases.length;
@@ -60,10 +36,12 @@ master.main = function(error, data){
     master.data = data[1];
     master.level.geojson = data[0];
     master.date.init();
-
+    master.DIM_OPACITY = 0.1;
     // master.level decides which level of data to show
     master.level.changeLevel('China');
     master.map.init();
+    master.utils.setSelectedNames();
+    master.utils.setRange();
     master.scatterplot.init();
     master.curvechart.init();
     master.control.init();
@@ -79,6 +57,7 @@ master.reset = function(){
     master.date.now = master.date.currentStart;
     d3.select('#now')
         .html(master.utils.id2string(master.date.now));
+    master.utils.setRange();
     master.map.init();
     master.scatterplot.init();
     master.curvechart.init();
@@ -86,11 +65,6 @@ master.reset = function(){
 }
 
 master.preprocess = function(data){
-    master.utils.parseTime = d3.timeParse('%m-%d-%Y');
-    master.utils.time2string = d3.timeFormat("%m-%d-%Y");
-    master.utils.id2string = function(id){
-        return master.utils.time2string(master.date.dateArray[id]);
-    };
     let types = ['confirmed', 'cured', 'dead', 'suspected'];
     let formatCases = function(cases){
         for(let i = 0; i < cases.length; i ++){

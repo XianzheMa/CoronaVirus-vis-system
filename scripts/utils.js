@@ -1,0 +1,161 @@
+/**
+ * get the count of the type in the region corresponding to the name.
+ * date is determined by master.level.now
+ * @param {string} name the name of the region
+ * @param {string} type one of "confirmed", "cured", "suspected", "dead" and the rate of each one
+ * @param {int} dateIndex defaults to master.date.now. Controls which date the count is at.
+ * If dateIndex is out of available range [0, length - 1], then returns the startIndex/endIndex's value.
+ */
+master.utils.getCount = function(name, type, dateIndex = master.date.now){
+    if(dateIndex < 0){
+        dateIndex = 0;
+    }
+    else if(dateIndex > master.date.length - 1){
+        dateIndex = master.date.length - 1;
+    }
+    return master.level.data[name].cases[dateIndex][type];
+};
+
+/**
+ * normalize the name (replace unsupported chars) so that it can be used as class name
+ */
+master.utils.normalize = function(name){
+    return name.replace(/ /g, '_').replace(/\//g, '_');
+};
+
+master.utils.parseTime = d3.timeParse('%m-%d-%Y');
+master.utils.time2string = d3.timeFormat("%m-%d-%Y");
+master.utils.id2string = function(id){
+    return master.utils.time2string(master.date.dateArray[id]);
+};
+
+
+/**
+ * append a 'g' element containing a tooltip
+ * @param {number} xPosition
+ * @param {number} yPosition
+ */
+master.utils.tooltip = function(context, bbox, contextBbox, textArray){
+    const lineWidth = 15;
+    const numberofLines = textArray.length;
+    const height = (numberofLines)*lineWidth, tickSize = 10;
+    const charLen = 5;
+    // find the maximal length of a text piece in textArray
+    let length = 0;
+    textArray.forEach(function(text){
+        if(length < text.length){
+            length = text.length;
+        }
+    });
+    const width = length * charLen;
+    const textPadding = 3;
+    const boxOpacity = 0.7;
+    let xPosition = bbox.x - contextBbox.x + bbox.width/2;
+    let yPosition = bbox.y - contextBbox.y;
+    let sign = -1; // -1 means the box would float on the top. 1 means on the bottom
+    if(- numberofLines * lineWidth - tickSize/2 + textPadding + bbox.y - contextBbox.y < 0){
+        sign = 1;
+        yPosition = yPosition + bbox.height;
+    }
+    let pathCommand =
+        " M " + (- width / 2) + " " + sign*(numberofLines * lineWidth + tickSize/2 - textPadding) +
+        " h " + width + 
+        " v " + height*(-sign) + 
+        " h " + (tickSize - width) / 2 +
+        " l " + (-tickSize / 2) + " " + tickSize / 2 * (-sign) +
+        " l " + (-tickSize / 2) +  " " + (-tickSize / 2) * (-sign) +
+        " h " + (tickSize - width) / 2 +
+        " z ";
+    let tooltip = context.append("g")
+        .attr("transform", "translate(" + xPosition + " " + (yPosition) + ")")
+        .attr("class", "tooltip");
+    
+    tooltip.append("path")
+        .attr("d", pathCommand)
+        .attr("opacity" , boxOpacity);
+    
+    for(let i = 0; i < textArray.length; i++){
+        let texts = tooltip.append("text")
+            .attr("class", "tooltipText")
+            .text(textArray[i]);
+        if(sign < 0){
+            texts.attr("y", -(textArray.length - 1 - i) * lineWidth - tickSize/2)
+        }
+        else{
+            texts.attr("y", (i+0.5) * lineWidth + tickSize/2);
+        }
+    }
+};
+
+master.utils.mouseOut = function(){
+    d3.selectAll(".tooltip").remove();
+    d3.select("#mapRegionGroup")
+        .selectAll("path")
+        .filter(function(d){
+            let name = d.properties.name;
+            let names = master.utils.selectedNames;
+            // filter out unselected, regions
+            for(const selectedName of names){
+                if(selectedName === name){
+                    return true;
+                }
+            }
+            return false;
+        })
+        .transition()
+        .attr("opacity", 1);
+    
+    d3.select('#scatterPointGroup')
+        .selectAll('circle')    // those on screen are only selected ones
+        .transition()
+        .attr('opacity', 1);
+
+};
+
+master.utils.setSelectedNames = function(){
+    this.selectedNames.clear();
+    d3.select('#map')
+        .selectAll('path')
+        .each(function(d){
+        if(d.available){
+            master.utils.selectedNames.add(d.properties.name);
+        }
+    });
+}
+
+
+/**
+ * set master.utils.range, which is used by other charts
+ */
+master.utils.setRange = function(){
+    let currentStart = master.date.currentStart;
+    let currentEnd = master.date.currentEnd;
+    let getRange = function(type){
+        let range = [0, 0];
+        for(const name of master.utils.selectedNames){
+            let localRange = d3.extent(master.level.data[name].cases.slice(currentStart, currentEnd + 1), function(eachCase){
+                return eachCase[type];
+            });
+            range[0] = Math.min(range[0], localRange[0]);
+            range[1] = Math.max(range[1], localRange[1]);
+        }
+        return range;
+    }
+    // set range for each type
+    let origTypes = ['confirmed', 'suspected', 'cured', 'dead'];
+    for(const type of origTypes.slice()){
+        origTypes.push(type + 'Rate');
+    }
+    for(const type of origTypes){
+        this.range[type] = getRange(type);
+    }
+}
+
+master.utils.readableType = function(type){
+    if(type.endsWith('Rate')){
+        return 'growth rate of ' + type(0, -4);
+    }
+    else{
+        return 'count of ' + type;
+    }
+}

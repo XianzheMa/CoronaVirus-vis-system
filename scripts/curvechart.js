@@ -30,7 +30,7 @@ master.curvechart.init = function(){
         .clamp(true)
         .nice();
     this.yScale = d3.scaleLinear()
-        .domain(master.map.range[this.type])
+        .domain(master.utils.range[this.type])
         .range([svgHeight - this.margin.top - this.margin.bottom, 0]);
     
     curveSvg.append('g')
@@ -46,19 +46,23 @@ master.curvechart.init = function(){
     curveSvg.append('g')
         .attr('id', 'strokeGroup')
         .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
-    // set up initial points
-    // TODO: do it later
     this.setPathsPoints();
+
+    // set up curve pieces up to master.date.now
+    for(let dateIndex = master.date.currentStart + 1; dateIndex <= master.date.now; dateIndex++){
+        this.update(0, dateIndex);
+    }
+
 }
 
 /**
  * this.pathsPoints is a map, whose (key, value) pairs are (dateIndex, points).
  * points is an array whose elements are point positions on the chart [x, y], having the same position in the array
- * as the corresponding name has in master.map.availableNames.
+ * as the corresponding name has in master.utils.selectedNames.
  */
 master.curvechart.setPathsPoints = function(){
     this.pathsPoints = new Map();
-    let names = master.map.availableNames;
+    let names = Array.from(master.utils.selectedNames);
     let xAxisInterval = this.xScale.range()[1] / (master.date.currentEnd - master.date.currentStart);
     let xScaleByIndex = function(dateIndex){
         return (dateIndex - master.date.currentStart) * xAxisInterval;
@@ -78,14 +82,14 @@ master.curvechart.setPathsPoints = function(){
 /**
  * extent each curve to one day more
  * @param {float} duration how long the transition will be
+ * @param {number} crtdateIndex draw the period within [dateIndex - 1, dateIndex]
  */
-master.curvechart.update = function(duration){
-    'use strict';
-    let names = master.map.availableNames;
+master.curvechart.update = function(duration, crtdateIndex = master.date.now){
+    let names = Array.from(master.utils.selectedNames);
     let dataArray = new Array(names.length);
     for(let nameIndex = 0; nameIndex < names.length; nameIndex++){
         let data = [];
-        for(let dateIndex = master.date.now - 2; dateIndex <= master.date.now + 1; dateIndex++){
+        for(let dateIndex = crtdateIndex - 2; dateIndex <= crtdateIndex + 1; dateIndex++){
             let point = this.pathsPoints.get(dateIndex)[names[nameIndex]];
             data.push({
                 'name': names[nameIndex],

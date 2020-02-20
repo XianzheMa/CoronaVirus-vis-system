@@ -73,8 +73,9 @@ master.map.setRange = function(){
  * @param {object} geojson
  * the geojson data read by d3.json, also used to update master.map.geojson with.
  */
-master.map.init = function(geojson){
+master.map.init = function(){
     "use strict";
+    let geojson = master.level.geojson;
     this.type = 'confirmed';
     this.setColorScale();
     let mapSvg = d3.select("#map");

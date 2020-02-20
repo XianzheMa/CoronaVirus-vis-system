@@ -1,6 +1,9 @@
 
 master = {}
 
+master.reset = function(){};
+
+
 master.date = {};
 master.date.init = function(){};
 master.date.dateArray = [];
@@ -15,16 +18,22 @@ master.level = {};
 master.level.name = null;
 master.level.data = {};
 master.level.changeLevel = function(){};
-
+master.level.geojson = null;
 
 master.utils = {};
 master.utils.normalize = function(){};
 master.utils.getCount = function(){};
+master.utils.parseTime = function(){};
+master.utils.time2string = function(){};
+master.utils.id2string = function(){};
 
 master.control = {};
 master.control.init = function(){};
 master.control.beginTransition = function(){};
 master.control.update = function(){};
+master.control.setList = function(){};
+master.control.changeVisibility = function(){};
+
 
 master.map = {};
 master.map.type = null;

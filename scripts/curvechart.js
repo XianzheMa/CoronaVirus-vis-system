@@ -23,6 +23,7 @@ master.curvechart.init = function(){
 
     let startDate = master.date.dateArray[master.date.currentStart];
     let endDate = master.date.dateArray[master.date.currentEnd];
+    let tickValues = master.date.dateArray.slice(master.date.currentStart, master.date.currentEnd + 1);
     this.xScale = d3.scaleTime()
         .domain([startDate, endDate])
         .range([0, svgWidth - this.margin.right - this.margin.left])
@@ -35,7 +36,7 @@ master.curvechart.init = function(){
     curveSvg.append('g')
         .attr('id', 'curve-xAxis')
         .attr('transform', 'translate(' + this.margin.left + "," + (svgHeight - this.margin.bottom) + ")")
-        .call(d3.axisBottom().scale(this.xScale).tickFormat(d3.timeFormat('%b %d')));
+        .call(d3.axisBottom().scale(this.xScale).tickValues(tickValues).tickFormat(d3.timeFormat('%b %d')));
     
     curveSvg.append('g')
         .attr('id', 'curve-yAxis')

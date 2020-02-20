@@ -26,7 +26,7 @@ body, html {
 
 .control {
     position: absolute;
-    width: 140px;
+    width: 130px;
     background-color: white;
     border: 1px solid darkgrey;
     border-radius: 5px;
@@ -45,3 +45,21 @@ body, html {
     stroke: steelblue;
     stroke-width: 2px;
 }
+
+.list{
+    float: right;
+}
+.container{
+    overflow: auto;
+}
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+#now{
+    float: auto;
+}
+

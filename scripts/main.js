@@ -58,25 +58,44 @@ master.main = function(error, data){
     // data[0] is china.geo.gson, data[1] is DXYArea_short.csv
     master.preprocess(data[1]);
     master.data = data[1];
-
+    master.level.geojson = data[0];
     master.date.init();
 
     // master.level decides which level of data to show
     master.level.changeLevel('China');
-    master.map.init(data[0]);
+    master.map.init();
     master.scatterplot.init();
     master.curvechart.init();
     master.control.init();
 };
 
+/**
+ * In two cases this method gets called:
+ * 1. The user reselects regions.
+ * 2. The user resets time period.
+ */
+master.reset = function(){
+    // set now to currentStart
+    master.date.now = master.date.currentStart;
+    d3.select('#now')
+        .html(master.utils.id2string(master.date.now));
+    master.map.init();
+    master.scatterplot.init();
+    master.curvechart.init();
+    // no need to reset control
+}
 
 master.preprocess = function(data){
-    let parseTime = d3.timeParse('%m-%d-%Y');
+    master.utils.parseTime = d3.timeParse('%m-%d-%Y');
+    master.utils.time2string = d3.timeFormat("%m-%d-%Y");
+    master.utils.id2string = function(id){
+        return master.utils.time2string(master.date.dateArray[id]);
+    };
     let types = ['confirmed', 'cured', 'dead', 'suspected'];
     let formatCases = function(cases){
         for(let i = 0; i < cases.length; i ++){
             // parse time
-            cases[i].time = parseTime(cases[i].time);
+            cases[i].time = master.utils.parseTime(cases[i].time);
             // add rate for each type
             for(let type of types){
                 let newProperty = type + 'Rate';
@@ -112,6 +131,6 @@ master.preprocess = function(data){
 };
 
 d3.queue(1)
-    .defer(d3.json, "./data/geojson/Hubei.geo.json")
+    .defer(d3.json, "./data/geojson/China.geo.json")
     .defer(d3.json, "./data/DXYArea_short.json")
     .awaitAll(master.main);

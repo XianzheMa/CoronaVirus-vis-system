@@ -70,7 +70,14 @@ master.control.changeList = function(symbol){
         }
         master.date.currentEnd = Number(selectedDateId);
     }
-    master.reset();
+    // set now to currentStart
+    master.date.now = master.date.currentStart;
+    d3.select('#now')
+        .html(master.utils.id2string(master.date.now));
+
+    master.map.update(0);
+    master.scatterplot.update(0);
+    master.curvechart.init();
 }
 
 /**

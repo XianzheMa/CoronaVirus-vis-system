@@ -14,6 +14,7 @@ master.curvechart.margin = {
 master.curvechart.init = function(){
     'use strict';
     this.type = 'confirmedRate';
+    this.RADIUS = 2;
     let curveSvg = d3.select("#curvechart");
     // clear previous children
     curveSvg.selectAll("*").remove();
@@ -29,10 +30,20 @@ master.curvechart.init = function(){
         .range([0, svgWidth - this.margin.right - this.margin.left])
         .clamp(true)
         .nice();
+
+    let xAxisInterval = this.xScale.range()[1] / (master.date.currentEnd - master.date.currentStart);
+    /**
+     * input: dateIndex; output: it's position on x-axis
+     */
+    this.xScaleByIndex = function(dateIndex){
+        return (dateIndex - master.date.currentStart) * xAxisInterval;
+    }
+
     this.yScale = d3.scaleLinear()
-        .domain(master.utils.range[this.type])
+        .domain(master.utils.getRange(this.type))
         .range([svgHeight - this.margin.top - this.margin.bottom, 0]);
     
+
     curveSvg.append('g')
         .attr('id', 'curve-xAxis')
         .attr('transform', 'translate(' + this.margin.left + "," + (svgHeight - this.margin.bottom) + ")")
@@ -48,12 +59,66 @@ master.curvechart.init = function(){
         .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
     this.setPathsPoints();
 
+    this.addCurrentPoints();
     // set up curve pieces up to master.date.now
     for(let dateIndex = master.date.currentStart + 1; dateIndex <= master.date.now; dateIndex++){
         this.update(0, dateIndex);
     }
 
 }
+
+/**
+ * add points according to master.date.now
+ */
+master.curvechart.addCurrentPoints = function(){
+    // d3.select('#strokeGroup')
+    //     .append('g')
+    //     .selectAll('circle')
+    //     .data(Array.from(master.utils.selectedNames))
+    //     .enter()
+    //     .append('circle')
+    //     .attr('class', function(name){
+    //         return master.utils.normalize(name);
+    //     })
+    //     .datum(function(name){
+    //         return {
+    //             'name': name,
+    //             'dateId': master.date.now
+    //         };
+    //     })
+    //     .attr('cx', function(d){
+    //         return master.curvechart.xScaleByIndex(d.dateId);
+    //     })
+    //     .attr('cy', function(d){
+    //         return master.curvechart.yScale(master.utils.getCount(d.name, master.curvechart.type));
+    //     })
+    //     .attr('r', this.RADIUS)
+    //     .attr('fill', function(d){
+    //         return 'black';
+    //     });
+};
+
+
+/**
+ * add a new entity on the chart
+ */
+master.curvechart.add = function(){
+    // since adding a new entity on the chart involves (possibly) 
+    // changing the scale, position of every curve piece, so for now
+    // it's better to start froms scratch
+    this.init();
+}
+
+/**
+ * remove an entity on the chart
+ */
+master.curvechart.remove = function(){
+    // since removing a new entity on the chart involves (possibly) 
+    // changing the scale, position of every curve piece, so for now
+    // it's better to start froms scratch
+    this.init();
+}
+
 
 /**
  * this.pathsPoints is a map, whose (key, value) pairs are (dateIndex, points).
@@ -63,15 +128,12 @@ master.curvechart.init = function(){
 master.curvechart.setPathsPoints = function(){
     this.pathsPoints = new Map();
     let names = Array.from(master.utils.selectedNames);
-    let xAxisInterval = this.xScale.range()[1] / (master.date.currentEnd - master.date.currentStart);
-    let xScaleByIndex = function(dateIndex){
-        return (dateIndex - master.date.currentStart) * xAxisInterval;
-    }
+    
     for(let dateIndex = master.date.currentStart - 1; dateIndex <= master.date.currentEnd + 1; dateIndex++){
         let points = {};
         for(const name of names){
             let rate = master.utils.getCount(name, this.type, dateIndex);
-            points[name] = [xScaleByIndex(dateIndex), this.yScale(rate)];
+            points[name] = [this.xScaleByIndex(dateIndex), this.yScale(rate)];
         }
         // insert the key, value pair
         this.pathsPoints.set(dateIndex, points);
@@ -115,7 +177,11 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
         .enter()
         .append('path')
         .attr('d', lineGen)
+        .attr('class', function(d){
+            return master.utils.normalize(d[0].name);
+        })
         .transition()
+        .on('end', master.curvechart.addCurrentPoints())
         .duration(duration)
         .attrTween('stroke-dasharray', tweenDash)
         .attrTween('stroke', tweenStroke);

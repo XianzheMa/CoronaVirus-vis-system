@@ -9,9 +9,9 @@ master.scatterplot.margin = {
 };
 
 master.scatterplot.setScale = function(){
-    if(master.level.name === 'China'){
-        let xDomain = master.utils.range[this.xType];
-        let yDomain = master.utils.range[this.yType];
+    if(master.utils.selectedNames.has('Hubei') || master.utils.selectedNames.has('Wuhan')){
+        let xDomain = master.utils.getRange(this.xType);
+        let yDomain = master.utils.getRange(this.yType);
         xDomain[0] = 1; yDomain[0] = 1;
         this.xScale = d3.scaleLog()
             .domain(xDomain)
@@ -26,6 +26,19 @@ master.scatterplot.setScale = function(){
             .base(10)
             .nice();
     }
+    else{
+        // use linear scale
+        let xDomain = master.utils.getRange(this.xType);
+        let yDomain = master.utils.getRange(this.yType);
+        this.xScale = d3.scaleLinear()
+            .domain(xDomain)
+            .range([0, this.svgWidth - this.margin.left - this.margin.right])
+            .nice();
+        this.yScale = d3.scaleLinear()
+            .domain(yDomain)
+            .range([this.svgHeight - this.margin.top - this.margin.bottom, 0])
+            .nice();
+    }
 };
 
 
@@ -35,27 +48,35 @@ master.scatterplot.setScale = function(){
 master.scatterplot.setAxes = function(scatterSvg){
     let xAxis = d3.axisBottom().scale(this.xScale);
     let yAxis = d3.axisLeft().scale(this.yScale);
-    if(master.level.name === 'China'){
+    if(master.utils.selectedNames.has('Hubei') || master.utils.selectedNames.has('Wuhan')){
         let xDomain = this.xScale.domain();
         let yDomain = this.yScale.domain();
         xAxis.ticks(Math.ceil(Math.log10(xDomain[1])), '.0s');
         yAxis.ticks(Math.ceil(Math.log10(yDomain[1])), '.0s');
     }
+    
     scatterSvg.append('g')
         .attr('id', 'scatter-xAxis')
         .attr('transform', 'translate(' + this.margin.left + "," + (this.svgHeight - this.margin.bottom) + ")")
-        .call(xAxis)
-        .select('.tick')
-        .select('text')
-        .text('<=1');
+        .call(xAxis);
+    
+        
     scatterSvg.append('g')
         .attr('id', 'scatter-yAxis')
         .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
-        .call(yAxis)
+        .call(yAxis);
+    
+    if(master.utils.selectedNames.has('Hubei') || master.utils.selectedNames.has('Wuhan')){
+        d3.select('#scatter-xAxis')
         .select('.tick')
         .select('text')
         .text('<=1');
-    
+
+        d3.select('#scatter-yAxis')
+        .select('.tick')
+        .select('text')
+        .text('<=1');
+    }    
 }
 
 
@@ -138,7 +159,9 @@ master.scatterplot.mouseOverScatterEle = function(name){
         const targetClass = '.' + master.utils.normalize(name);
         master.map.mouseOverMapEle.call(d3.select('#map').select(targetClass).node(), null);
     }
-}
+};
+
+
 /**
  * move the points according to master.date.now
  * @param {float} duration duration of the transition, 0 means no transition
@@ -160,4 +183,12 @@ master.scatterplot.update = function(duration){
             let count = master.utils.getCount(name, master.map.type);
             return master.map.colorScale(count);
         });
-}
+};
+
+master.scatterplot.add = function(){
+    this.init();
+};
+
+master.scatterplot.remove = function(){
+    this.init();
+};

@@ -112,43 +112,23 @@ master.utils.mouseOut = function(){
 
 };
 
-master.utils.setSelectedNames = function(){
-    this.selectedNames.clear();
-    d3.select('#map')
-        .selectAll('path')
-        .each(function(d){
-        if(d.available){
-            master.utils.selectedNames.add(d.properties.name);
-        }
-    });
-}
-
 
 /**
- * set master.utils.range, which is used by other charts
+ * get range of the type, during [start, end] among master.utils.selectedNames
+ * @param {string} type
+ * @param {integer} start default to master.date.currentStart
+ * @param {integer} end default to master.date.currentEnd
  */
-master.utils.setRange = function(){
-    let currentStart = master.date.currentStart;
-    let currentEnd = master.date.currentEnd;
-    let getRange = function(type){
-        let range = [0, 0];
-        for(const name of master.utils.selectedNames){
-            let localRange = d3.extent(master.level.data[name].cases.slice(currentStart, currentEnd + 1), function(eachCase){
-                return eachCase[type];
-            });
-            range[0] = Math.min(range[0], localRange[0]);
-            range[1] = Math.max(range[1], localRange[1]);
-        }
-        return range;
+master.utils.getRange = function(type, start = master.date.currentStart, end = master.date.currentEnd){
+    let range = [0, 0];
+    for(const name of master.utils.selectedNames){
+        let localRange = d3.extent(master.level.data[name].cases.slice(start, end + 1), function(eachDay){
+            return eachDay[type];
+        });
+        range[0] = Math.min(range[0], localRange[0]);
+        range[1] = Math.max(range[1], localRange[1]);
     }
-    // set range for each type
-    let origTypes = ['confirmed', 'suspected', 'cured', 'dead'];
-    for(const type of origTypes.slice()){
-        origTypes.push(type + 'Rate');
-    }
-    for(const type of origTypes){
-        this.range[type] = getRange(type);
-    }
+    return range;
 }
 
 master.utils.readableType = function(type){

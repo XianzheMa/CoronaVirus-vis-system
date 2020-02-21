@@ -40,29 +40,10 @@ master.main = function(error, data){
     // master.level decides which level of data to show
     master.level.changeLevel('China');
     master.map.init();
-    master.utils.setSelectedNames();
-    master.utils.setRange();
     master.scatterplot.init();
     master.curvechart.init();
     master.control.init();
 };
-
-/**
- * In two cases this method gets called:
- * 1. The user reselects regions.
- * 2. The user resets time period.
- */
-master.reset = function(){
-    // set now to currentStart
-    master.date.now = master.date.currentStart;
-    d3.select('#now')
-        .html(master.utils.id2string(master.date.now));
-    master.utils.setRange();
-    master.map.init();
-    master.scatterplot.init();
-    master.curvechart.init();
-    // no need to reset control
-}
 
 master.preprocess = function(data){
     let types = ['confirmed', 'cured', 'dead', 'suspected'];

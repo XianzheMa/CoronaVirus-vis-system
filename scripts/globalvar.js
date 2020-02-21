@@ -1,7 +1,6 @@
 
 master = {}
 master.DIM_OPACITY = null;
-master.reset = function(){};
 
 
 master.date = {};
@@ -28,8 +27,7 @@ master.utils.time2string = function(){};
 master.utils.id2string = function(){};
 master.utils.initSelectedNames = function(){};
 master.utils.selectedNames = new Set();
-master.utils.setRange = function(){};
-master.utils.range = {};
+master.utils.getRange = function(){};
 
 master.control = {};
 master.control.init = function(){};

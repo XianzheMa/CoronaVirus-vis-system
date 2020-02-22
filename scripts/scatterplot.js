@@ -119,7 +119,7 @@ master.scatterplot.init = function(){
         })
         .style('stroke', 'black')
         .style('stroke-width', 0.75)
-        .on('mouseover', this.mouseOverScatterEle)
+        .on('mouseover', this.mouseOverEle)
         .on('mouseout', master.utils.mouseOut);
     
 }
@@ -127,7 +127,7 @@ master.scatterplot.init = function(){
 /**
  * ! this method should only be used as an event handler, because the meaning of this is different
  */
-master.scatterplot.mouseOverScatterEle = function(name){
+master.scatterplot.mouseOverEle = function(name){
     let registerCall = true;
     if(name === null){
         // called by other mouseOver functions
@@ -157,7 +157,7 @@ master.scatterplot.mouseOverScatterEle = function(name){
         .attr('opacity', master.DIM_OPACITY);
     if(registerCall){
         const targetClass = '.' + master.utils.normalize(name);
-        master.map.mouseOverMapEle.call(d3.select('#map').select(targetClass).node(), null);
+        master.map.mouseOverEle.call(d3.select('#map').select(targetClass).node(), null);
     }
 };
 

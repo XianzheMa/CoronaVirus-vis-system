@@ -35,8 +35,8 @@ master.main = function(error, data){
     master.preprocess(data[1]);
     master.data = data[1];
     master.level.geojson = data[0];
-    master.date.init();
     master.DIM_OPACITY = 0.1;
+    master.date.init();
     // master.level decides which level of data to show
     master.level.changeLevel('China');
     master.map.init();

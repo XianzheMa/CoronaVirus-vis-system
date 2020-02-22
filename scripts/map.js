@@ -15,7 +15,6 @@ master.map.setColorScale = function(){
     if(master.utils.selectedNames.has('Hubei') || master.utils.selectedNames.has('Wuhan')){
         // in this case we don't need to 'calculate' the best scale
         // because it has been well proposed
-        // FIXME: use this color scale only when Hubei is included
         let colorThresholds = [1, 10, 100, 500, 1000, 10000];
         this.colorScale = d3.scaleThreshold()
         .domain(colorThresholds)
@@ -32,9 +31,19 @@ master.map.setColorScale = function(){
     }
 }
 
-
-
-
+/**
+ * set up those marks, constants, etc.
+ * 
+ * only be executed once.
+ */
+master.map.firstInitial = function(){
+    if(master.map.firstInitial.hasOwnProperty('__DONE__')){
+        return;
+    }
+    master.map.firstInitial.__DONE__ = true;
+    this.CLICK_DELAY = 400;
+    this.PREVENT = false;
+}
 /**
  * initialize a map on the svg element #map.
  * gets called on startup or when the map is changed.
@@ -42,6 +51,7 @@ master.map.setColorScale = function(){
  */
 master.map.init = function(){
     "use strict";
+    this.firstInitial();
     let geojson = master.level.geojson;
     this.type = 'confirmed';
     let mapSvg = d3.select("#map");
@@ -52,7 +62,6 @@ master.map.init = function(){
     const boundingBox = mapSvg.node().getBoundingClientRect();
     const AvailableWidth = boundingBox.width - this.margin.left - this.margin.right;
     const AvailableHeight = boundingBox.height - this.margin.top - this.margin.bottom;
-
 
     let projection = d3.geoMercator()
         .fitSize([AvailableWidth, AvailableHeight], geojson);
@@ -91,11 +100,10 @@ master.map.init = function(){
     this.update(0);
     // set interaction
     this.setInteraction();
-
 };
 
 // ! should only be used as event handlers, since 'this' is not used traditionally.
-master.map.mouseOverMapEle = function(datum){
+master.map.mouseOverEle = function(datum){
     let registerCall = true;
     if(datum === null){
         // called by other mouseOver functions
@@ -145,20 +153,31 @@ master.map.mouseOverMapEle = function(datum){
     if(registerCall && datum.available){
         // only when it is selected & available could it be linked to others
         const targetClass = '.' + master.utils.normalize(name);
-        master.scatterplot.mouseOverScatterEle.call(d3.select('#scatterplot').select(targetClass).node(), null);
+        master.scatterplot.mouseOverEle.call(d3.select('#scatterplot').select(targetClass).node(), null);
         // FIXME: link with curvechart
     }
 }
 
-
 master.map.setInteraction = function(){
     d3.select('#mapRegionGroup')
         .selectAll('path')
-        .on('mouseover', this.mouseOverMapEle)
+        .on('mouseover', this.mouseOverEle)
         .on('mouseout', master.utils.mouseOut)
-        .on('click', mouseClick);
+        .on('click', clickHandle)
+        .on('dblclick', dblclick);
     
-    function mouseClick(datum){
+    function clickHandle(datum){
+        const that = this;
+        master.map.timer = setTimeout(function(){
+            if(master.map.PREVENT === false){
+                click.call(that, datum);
+            }
+            master.map.PREVENT = false;
+            
+        }, master.map.CLICK_DELAY);
+    }
+
+    function click(datum){
         if(datum.available === false){
             // it cannot be selected
             return;
@@ -186,8 +205,26 @@ master.map.setInteraction = function(){
             master.scatterplot.add(name);
             master.curvechart.add(name);
             // mouse over it
-            master.map.mouseOverMapEle.call(this, datum);
+            master.map.mouseOverEle.call(this, datum);
         }
+    }
+
+    function dblclick(datum){
+        clearTimeout(master.map.timer);
+        master.map.PREVENT = true;
+        if(datum.available === false){
+            // cannot zoom in on unavailable regions
+            return;
+        }
+        let name = datum.properties.name;
+        d3.json('./data/geojson/' + name + '.geo.json', function(error, geojson){
+            if(error) throw error;
+            master.level.geojson = geojson;
+            master.level.changeLevel(name);
+            master.map.init();
+            master.scatterplot.init();
+            master.curvechart.init();
+        });
     }
 };
 /**

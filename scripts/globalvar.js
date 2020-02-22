@@ -1,4 +1,4 @@
-
+// ! nearly deprecated
 master = {}
 master.DIM_OPACITY = null;
 

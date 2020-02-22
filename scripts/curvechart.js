@@ -59,7 +59,7 @@ master.curvechart.init = function(){
         .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
     this.setPathsPoints();
 
-    this.addCurrentPoints();
+    //this.addCurrentPoints();
     // set up curve pieces up to master.date.now
     for(let dateIndex = master.date.currentStart + 1; dateIndex <= master.date.now; dateIndex++){
         this.update(0, dateIndex);
@@ -70,7 +70,7 @@ master.curvechart.init = function(){
 /**
  * add points according to master.date.now
  */
-master.curvechart.addCurrentPoints = function(){
+//master.curvechart.addCurrentPoints = function(){
     // d3.select('#strokeGroup')
     //     .append('g')
     //     .selectAll('circle')
@@ -96,7 +96,7 @@ master.curvechart.addCurrentPoints = function(){
     //     .attr('fill', function(d){
     //         return 'black';
     //     });
-};
+//};
 
 
 /**
@@ -202,3 +202,18 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
         return d3.interpolateRgb(colorScale(yesterdayCount), colorScale(nowCount));
     }
 };
+
+/**
+ * mouseover callback function for curve piece on the plot
+ *  This method should only be used as a callback, because "this" has a different meaning.
+ *  Or, use function.call or function.apply to mock the event call.
+ *  In this case, datum should be set as null to distinguish it from normal event calls
+ */
+master.curvechart.mouseOverEle = function(datum){
+    let registerCall = true;
+    if(datum === null){
+        // called by other mouseOver functions
+        registerCall = false;
+        
+    }
+}

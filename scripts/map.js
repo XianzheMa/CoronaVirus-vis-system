@@ -119,7 +119,6 @@ master.map.mouseOverEle = function(datum){
         }
     }
     const bbox = this.getBoundingClientRect();
-    const parentBbox = document.getElementById("map").getBoundingClientRect();
     let textArray = [];
     // name
     textArray.push(datum.properties.name);
@@ -130,7 +129,7 @@ master.map.mouseOverEle = function(datum){
     else{
         textArray.push(master.utils.readableType(master.map.type) + ": unavailable");
     }
-    master.utils.tooltip(d3.select('#map'), bbox, parentBbox, textArray);
+    master.utils.tooltip(d3.select('#map'), bbox, textArray);
     // change other regions' opacity
     const that = this;
     d3.select("#mapRegionGroup")
@@ -154,7 +153,7 @@ master.map.mouseOverEle = function(datum){
         // only when it is selected & available could it be linked to others
         const targetClass = '.' + master.utils.normalize(name);
         master.scatterplot.mouseOverEle.call(d3.select('#scatterplot').select(targetClass).node(), null);
-        // FIXME: link with curvechart
+        master.curvechart.mouseOverEle.call(d3.select('#curvechart').select(targetClass).node(), null);
     }
 }
 

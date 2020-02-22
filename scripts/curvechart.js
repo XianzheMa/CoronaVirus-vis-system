@@ -54,10 +54,25 @@ master.curvechart.init = function(){
         .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
         .call(d3.axisLeft().scale(this.yScale));
     
+    // add a trokeGroup element easing the need to translate every element by the margin
+    // and add group elements for each name in master.utils.selectedNames under it
     curveSvg.append('g')
         .attr('id', 'strokeGroup')
-        .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
-    this.setPathsPoints();
+        .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
+        .selectAll('g')
+        .data(Array.from(master.utils.selectedNames))
+        .enter()
+        .append('g')
+        .attr('class', function(name){
+            return name + ' curve';
+        })
+        .attr('opacity', 1)
+        .on('mouseover', this.mouseOverEle)
+        .on('mouseout', master.utils.mouseOut);
+
+
+    this.setPointPositions();
+
 
     //this.addCurrentPoints();
     // set up curve pieces up to master.date.now
@@ -121,12 +136,12 @@ master.curvechart.remove = function(){
 
 
 /**
- * this.pathsPoints is a map, whose (key, value) pairs are (dateIndex, points).
+ * this.pointPositions is a map, whose (key, value) pairs are (dateIndex, points).
  * points is an array whose elements are point positions on the chart [x, y], having the same position in the array
  * as the corresponding name has in master.utils.selectedNames.
  */
-master.curvechart.setPathsPoints = function(){
-    this.pathsPoints = new Map();
+master.curvechart.setPointPositions = function(){
+    this.pointPositions = new Map();
     let names = Array.from(master.utils.selectedNames);
     
     for(let dateIndex = master.date.currentStart - 1; dateIndex <= master.date.currentEnd + 1; dateIndex++){
@@ -136,7 +151,7 @@ master.curvechart.setPathsPoints = function(){
             points[name] = [this.xScaleByIndex(dateIndex), this.yScale(rate)];
         }
         // insert the key, value pair
-        this.pathsPoints.set(dateIndex, points);
+        this.pointPositions.set(dateIndex, points);
     }
 };
 
@@ -147,44 +162,33 @@ master.curvechart.setPathsPoints = function(){
  * @param {number} crtdateIndex draw the period within [dateIndex - 1, dateIndex]
  */
 master.curvechart.update = function(duration, crtdateIndex = master.date.now){
-    let names = Array.from(master.utils.selectedNames);
-    let dataArray = new Array(names.length);
-    for(let nameIndex = 0; nameIndex < names.length; nameIndex++){
-        let data = [];
-        for(let dateIndex = crtdateIndex - 2; dateIndex <= crtdateIndex + 1; dateIndex++){
-            let point = this.pathsPoints.get(dateIndex)[names[nameIndex]];
-            data.push({
-                'name': names[nameIndex],
-                'point': point
-            });
-        }
-        dataArray[nameIndex] = data;
-    }
 
     let lineGen = d3.line()
-        .curve(d3.curveCatmullRomOpen)
-        .x(function(d){
-            return d.point[0];
-        })
-        .y(function(d){
-            return d.point[1];
-        });
-
+        .curve(d3.curveCatmullRomOpen);
+    
     d3.select('#strokeGroup')
-        .append('g')
-        .selectAll('path')
-        .data(dataArray)
-        .enter()
-        .append('path')
-        .attr('d', lineGen)
-        .attr('class', function(d){
-            return master.utils.normalize(d[0].name);
-        })
-        .transition()
-        .on('end', master.curvechart.addCurrentPoints())
-        .duration(duration)
-        .attrTween('stroke-dasharray', tweenDash)
-        .attrTween('stroke', tweenStroke);
+        .selectAll('g') // select all group elements (corresponding to each name in master.utils.selectedNames)
+        .each(function(name){
+            d3.select(this)
+                .append('path')
+                .datum(function(){
+                    // return the data points defining the curve path
+                    let pathPoints = [];
+                    for(let dateIndex = crtdateIndex - 2; dateIndex <= crtdateIndex + 1; dateIndex++){
+                        pathPoints.push(master.curvechart.pointPositions.get(dateIndex)[name]);
+                    }
+                    return pathPoints;
+                })
+                .attr('id', 'curve' + crtdateIndex)
+                .attr('d', lineGen)
+                .datum(function(){ // after generating the path using lineGen, we can abandon the path data
+                    return name;
+                })
+                .transition()
+                .duration(duration)
+                .attrTween('stroke-dasharray', tweenDash)
+                .attrTween('stroke', tweenStroke);
+        });
 
     function tweenDash(){
         let l = this.getTotalLength();
@@ -192,9 +196,7 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
     }
 
     function tweenStroke(){
-        // note that each datum bound to it is an array of length 4.
-        // Each element is an object with properties: name, point
-        let name = d3.select(this).datum()[0].name;
+        let name = d3.select(this).datum();
         let now = master.date.now;
         let colorScale = master.map.colorScale;
         let yesterdayCount = master.utils.getCount(name, master.map.type, now - 1);
@@ -211,9 +213,46 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
  */
 master.curvechart.mouseOverEle = function(datum){
     let registerCall = true;
+    let highlightedElement = d3.select(this);
     if(datum === null){
         // called by other mouseOver functions
         registerCall = false;
-        
+        datum = d3.select(this).datum();
+    }
+    // put this curve on the top
+    highlightedElement.raise();
+    // change other curves' opacity
+    const that = this;
+    d3.select('#curvechart')
+        .selectAll('.curve')
+        .filter(function(){
+            if(this === that){
+                return false;
+            }
+            return true;
+        })
+        .transition()
+        .attr('opacity', master.DIM_OPACITY);
+    if(registerCall){
+        // first add the tooltip
+        let mouseX = d3.mouse(document.getElementById('curvechart'))[0] - master.curvechart.margin.left;
+        let xAxisInterval = master.curvechart.xScale.range()[1] / (master.date.currentEnd - master.date.currentStart);
+        let dateId = Math.round(mouseX / xAxisInterval) + master.date.currentStart;
+        let cx = master.curvechart.xScaleByIndex(dateId);
+        let cy = master.curvechart.yScale(master.utils.getCount(datum, master.curvechart.type, dateId));
+        let strokeGroup = d3.select('#strokeGroup');
+        let mark = strokeGroup.append('circle')
+            .attr('cx', cx)
+            .attr('cy', cy)
+            .attr('r', master.curvechart.RADIUS)
+            .attr('fill', 'black');
+        let textArray = [];
+        textArray.push(datum);
+        textArray.push('date: ' + master.utils.id2string(dateId));
+        textArray.push(master.utils.readableType(master.curvechart.type) + ": " + master.utils.getCount(datum, master.curvechart.type));
+        master.utils.tooltip(strokeGroup, mark.node().getBoundingClientRect(), textArray);
+        const targetClass = '.' + master.utils.normalize(datum);
+        master.map.mouseOverEle.call(d3.select('#map').select(targetClass).node(), null);
+        master.scatterplot.mouseOverEle.call(d3.select('#scatterplot').select(targetClass).node(), null);
     }
 }

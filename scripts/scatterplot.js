@@ -137,17 +137,16 @@ master.scatterplot.mouseOverEle = function(name){
     // put this circle on the top
     d3.select(this).raise();
     const bbox = this.getBoundingClientRect();
-    const parentBbox = document.getElementById('scatterplot').getBoundingClientRect();
     let textArray = [];
     textArray.push(name);
     textArray.push(master.utils.readableType(master.scatterplot.xType) + ": " + master.utils.getCount(name, master.scatterplot.xType));
     textArray.push(master.utils.readableType(master.scatterplot.yType) + ": " + master.utils.getCount(name, master.scatterplot.yType));
-    master.utils.tooltip(d3.select('#scatterplot'), bbox, parentBbox, textArray);
+    master.utils.tooltip(d3.select('#scatterplot'), bbox, textArray);
     // change other circles' opacity
     const that = this;
     d3.select('#scatterPointGroup')
         .selectAll('circle')
-        .filter(function(d){
+        .filter(function(){
             if(this === that){
                 return false;
             }
@@ -158,6 +157,7 @@ master.scatterplot.mouseOverEle = function(name){
     if(registerCall){
         const targetClass = '.' + master.utils.normalize(name);
         master.map.mouseOverEle.call(d3.select('#map').select(targetClass).node(), null);
+        master.curvechart.mouseOverEle.call(d3.select('#curvechart').select(targetClass).node(), null);
     }
 };
 
@@ -167,7 +167,7 @@ master.scatterplot.mouseOverEle = function(name){
  * @param {float} duration duration of the transition, 0 means no transition
  */
 master.scatterplot.update = function(duration){
-    let points = d3.select('#scatterPointGroup')
+    d3.select('#scatterPointGroup')
         .selectAll('circle')
         .transition()
         .duration(duration)

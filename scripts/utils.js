@@ -35,7 +35,8 @@ master.utils.id2string = function(id){
  * @param {number} xPosition
  * @param {number} yPosition
  */
-master.utils.tooltip = function(context, bbox, contextBbox, textArray){
+master.utils.tooltip = function(context, bbox, textArray){
+    const contextBbox = context.node().getBoundingClientRect();
     const lineWidth = 15;
     const numberofLines = textArray.length;
     const height = (numberofLines)*lineWidth, tickSize = 10;
@@ -72,7 +73,8 @@ master.utils.tooltip = function(context, bbox, contextBbox, textArray){
     
     tooltip.append("path")
         .attr("d", pathCommand)
-        .attr("opacity" , boxOpacity);
+        .attr("opacity" , boxOpacity)
+        .attr('fill', 'black');
     
     for(let i = 0; i < textArray.length; i++){
         let texts = tooltip.append("text")
@@ -110,6 +112,14 @@ master.utils.mouseOut = function(){
         .transition()
         .attr('opacity', 1);
 
+    d3.select('#strokeGroup')
+        .selectAll('.curve')
+        .transition()
+        .attr('opacity', 1)
+    
+    d3.select('#strokeGroup')
+        .select('circle')
+        .remove();
 };
 
 
@@ -133,9 +143,19 @@ master.utils.getRange = function(type, start = master.date.currentStart, end = m
 
 master.utils.readableType = function(type){
     if(type.endsWith('Rate')){
-        return 'growth rate of ' + type(0, -4);
+        return 'growth rate of ' + type.slice(0, -4);
     }
     else{
         return 'count of ' + type;
     }
+}
+
+/**
+ * a pipeline for changing master.date.now and the nowList's selected value
+ */
+master.utils.changeNow = function(dateId){
+    master.date.now = dateId;
+    d3.select('#nowDate')
+        .select('#now' + dateId)
+        .property('selected', true);
 }

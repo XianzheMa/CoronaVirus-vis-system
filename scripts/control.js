@@ -4,77 +4,109 @@ master.control.init = function(){
     this.EX_DURATION = 1000;
     d3.select('#startTransition')
         .on('click', function(){
+            // FIXME: change it to disable the whole control panel
             this.disabled = true;
             master.control.beginTransition();
         });
-    d3.select('#now')
-        .html(master.utils.id2string(master.date.now));
     this.setList();
     
 };
 
+/**
+ * set lists of start date and end date
+ */
 master.control.setList = function(){
     // add options to two dropdown lists
     let startList = d3.select("#startDate");
     let endList = d3.select('#endDate');
+    let nowList = d3.select('#nowDate');
     startList.attr('onchange', 'master.control.changeList(1)');
     endList.attr('onchange', 'master.control.changeList(2)');
+    nowList.attr('onchange', 'master.control.changeList(3)');
     for(let dateIndex = 0; dateIndex < master.date.length; dateIndex++){
         let dateString = master.utils.id2string(dateIndex);
         let startOption = startList.append('option')
             .attr('value', dateIndex)
-            .attr('id', 'start' + dateString)
+            .attr('id', 'start' + dateIndex)
             .html(dateString);
         
         let endOption = endList.append('option')
             .attr('value', dateIndex)
-            .attr('id', 'end' + dateString)
+            .attr('id', 'end' + dateIndex)
+            .html(dateString);
+        
+        let nowOption = nowList.append('option')
+            .attr('value', dateIndex)
+            .attr('id', 'now' + dateIndex)
             .html(dateString);
         // set default value and disable end value
-        if(dateIndex ==  0){
+        if(dateIndex ===  0){
             startOption.node().selected = true;
             endOption.node().disabled = true;
         }
-        if(dateIndex ==  master.date.length - 1){
+        if(dateIndex ===  master.date.length - 1){
             endOption.node().selected = true;
             startOption.node().disabled = true;
+        }
+        if(dateIndex === master.date.now){
+            nowOption.property('selected', true);
         }
     }
 };
 
 master.control.changeList = function(symbol){
-    // symbol: 1 means startDate and 2 means endDate
-    if(symbol === 1){
-        let selectedDateId = document.getElementById('startDate').value;
+    // symbol: 1 means startDate, 2 means endDate and 3 means nowDate
+    /**
+     * the valid interval is [lower, upper]
+     * @param {string} type one of 'start', 'end', 'now'
+     */
+    function rebound(type){
+        let lower, upper;
+        if(type === 'start'){
+            lower = 0;
+            upper = master.date.now;
+        }
+        else if(type === 'end'){
+            lower = master.date.now;
+            upper = master.date.length - 1;
+        }
+        else{
+            // now
+            lower = master.date.currentStart;
+            upper = master.date.currentEnd;
+        }
         for(dateId = 0; dateId < master.date.length; dateId++){
-            let dateString = master.utils.id2string(dateId);
-            if(dateId <= selectedDateId){
-                document.getElementById('end' + dateString).disabled = true;
+            let option = document.getElementById(type + dateId);
+            if(dateId < lower || dateId > upper){
+                option.disabled = true;
             }
             else{
-                document.getElementById('end' + dateString).disabled = false;
+                option.disabled = false;
             }
         }
-        master.date.currentStart = Number(selectedDateId);
+    }
+
+    if(symbol === 1){
+        master.date.currentStart = Number(document.getElementById('startDate').value);
+        if(master.date.now < master.date.currentStart){
+            master.utils.changeNow(master.date.currentStart);
+        }
+        rebound('end');
+        rebound('now');
+    }
+    else if (symbol === 2){
+        master.date.currentEnd = Number(document.getElementById('endDate').value);
+        if(master.date.now > master.date.currentEnd){
+            master.utils.changeNow(master.date.currentEnd);
+        }
+        rebound('start');
+        rebound('now');
     }
     else{
-        let selectedDateId = document.getElementById('endDate').value;
-        for(dateId = 0; dateId < master.date.length; dateId++){
-            let dateString = master.utils.id2string(dateId);
-            if(dateId < selectedDateId){
-                document.getElementById('start' + dateString).disabled = false;
-            }
-            else{
-                document.getElementById('start' + dateString).disabled = true;
-            }
-        }
-        master.date.currentEnd = Number(selectedDateId);
+        master.date.now = Number(document.getElementById('nowDate').value);
+        rebound('start');
+        rebound('end');
     }
-    // set now to currentStart
-    master.date.now = master.date.currentStart;
-    d3.select('#now')
-        .html(master.utils.id2string(master.date.now));
-
     master.map.update(0);
     master.scatterplot.update(0);
     master.curvechart.init();
@@ -96,8 +128,7 @@ master.control.beginTransition = function(){
  * update each chart
  */
 master.control.update = function(){
-    d3.select('#now')
-            .html(master.utils.id2string(master.date.now));
+    master.utils.changeNow(master.date.now);
     if(master.date.now < master.date.currentEnd){
         master.date.now = master.date.now + 1;
         master.map.update(this.IN_DURATION);

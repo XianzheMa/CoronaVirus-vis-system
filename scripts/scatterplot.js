@@ -3,7 +3,7 @@
  */
 master.scatterplot.margin = {
     top:30,
-    bottom:30,
+    bottom:40,
     left:60,
     right:60
 };
@@ -66,6 +66,17 @@ master.scatterplot.setAxes = function(scatterSvg){
         .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
         .call(yAxis);
     
+    scatterSvg.append('text')
+        .attr('class', 'axisText')
+        .attr('transform', `translate(${this.margin.left + this.xScale.range()[1]/2},
+             ${this.margin.top + this.yScale.range()[0] + 30})`)
+        .text(master.utils.readableType(this.xType));
+
+    scatterSvg.append('text')
+        .attr('class', 'axisText')
+        .attr('transform', `rotate(-90) translate(${-this.margin.top - this.yScale.range()[0]/2},
+            ${this.margin.left/2})`)
+        .text(master.utils.readableType(this.yType));
     if(master.utils.selectedNames.has('Hubei') || master.utils.selectedNames.has('Wuhan')){
         d3.select('#scatter-xAxis')
         .select('.tick')

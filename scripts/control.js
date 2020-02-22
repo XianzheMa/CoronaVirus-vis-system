@@ -4,9 +4,13 @@ master.control.init = function(){
     this.EX_DURATION = 1000;
     d3.select('#startTransition')
         .on('click', function(){
-            // FIXME: change it to disable the whole control panel
             this.disabled = true;
-            master.control.beginTransition();
+            d3.selectAll('.list')
+                .property('disabled', true);
+            master.map.changeClick(false);
+            window.dataUpdatingInterval = window.setInterval(function(){
+                master.control.update();
+            }, master.control.EX_DURATION);
         });
     this.setList();
     
@@ -24,7 +28,7 @@ master.control.setList = function(){
     endList.attr('onchange', 'master.control.changeList(2)');
     nowList.attr('onchange', 'master.control.changeList(3)');
     for(let dateIndex = 0; dateIndex < master.date.length; dateIndex++){
-        let dateString = master.utils.id2string(dateIndex);
+        let dateString = master.utils.id2readableString(dateIndex);
         let startOption = startList.append('option')
             .attr('value', dateIndex)
             .attr('id', 'start' + dateIndex)
@@ -112,22 +116,12 @@ master.control.changeList = function(symbol){
     master.curvechart.init();
 }
 
-/**
- * begin a new period of transition according to master.date.startDate and master.date.endDate
- */
-master.control.beginTransition = function(){
-    // block pointer event
-    d3.selectAll('svg')
-        .style('pointer-events', 'none');
-    window.dataUpdatingInterval = window.setInterval(function(){
-        master.control.update();
-    }, this.EX_DURATION);
-};
 
 /**
  * update each chart
  */
 master.control.update = function(){
+    
     master.utils.changeNow(master.date.now);
     if(master.date.now < master.date.currentEnd){
         master.date.now = master.date.now + 1;
@@ -137,10 +131,9 @@ master.control.update = function(){
     }
     else{
         document.getElementById('startTransition').disabled = false;
+        d3.selectAll('.list')
+            .property('disabled', false);
         window.clearInterval(window.dataUpdatingInterval);
-        // restore pointer events
-        d3.selectAll('svg')
-            .style('pointer-events', 'auto');
-        // auto means the element behaves as if it were not specified
+        master.map.changeClick(true);
     }
 };

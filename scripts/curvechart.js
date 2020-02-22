@@ -4,8 +4,8 @@
 master.curvechart.margin = {
     top:30,
     bottom:30,
-    left:30,
-    right:30
+    left:70,
+    right:70
 };
 
 /**
@@ -15,6 +15,7 @@ master.curvechart.init = function(){
     'use strict';
     this.type = 'confirmedRate';
     this.RADIUS = 2;
+    this.EPSILON = 1e-8;
     let curveSvg = d3.select("#curvechart");
     // clear previous children
     curveSvg.selectAll("*").remove();
@@ -49,11 +50,19 @@ master.curvechart.init = function(){
         .attr('transform', 'translate(' + this.margin.left + "," + (svgHeight - this.margin.bottom) + ")")
         .call(d3.axisBottom().scale(this.xScale).tickValues(tickValues).tickFormat(d3.timeFormat('%b %d')));
     
+    let yAxis = d3.axisLeft().scale(this.yScale);
+    if(this.type.endsWith('Rate')){
+        yAxis = yAxis.tickFormat(d3.format('.0%'));
+    }
     curveSvg.append('g')
         .attr('id', 'curve-yAxis')
         .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
-        .call(d3.axisLeft().scale(this.yScale));
-    
+        .call(yAxis);
+
+    curveSvg.append('text')
+        .attr('class', 'axisText')
+        .attr('transform', `rotate(-90) translate(${-this.margin.top - this.yScale.range()[0]/2}, ${this.margin.left/2 - 10})`)
+        .text(master.utils.readableType(this.type));
     // add a trokeGroup element easing the need to translate every element by the margin
     // and add group elements for each name in master.utils.selectedNames under it
     curveSvg.append('g')
@@ -174,8 +183,16 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
                 .datum(function(){
                     // return the data points defining the curve path
                     let pathPoints = [];
-                    for(let dateIndex = crtdateIndex - 2; dateIndex <= crtdateIndex + 1; dateIndex++){
-                        pathPoints.push(master.curvechart.pointPositions.get(dateIndex)[name]);
+                    let yesterDayCount = master.utils.getCount(name, master.curvechart.type, crtdateIndex - 1);
+                    let todayCount = master.utils.getCount(name, master.curvechart.type, crtdateIndex);
+                    if(Math.abs(yesterDayCount - todayCount) < master.curvechart.EPSILON){
+                        // just draw a horizontal line
+                        pathPoints = [yesterDayCount, yesterDayCount, todayCount, todayCount];
+                    }
+                    else{
+                        for(let dateIndex = crtdateIndex - 2; dateIndex <= crtdateIndex + 1; dateIndex++){
+                            pathPoints.push(master.curvechart.pointPositions.get(dateIndex)[name]);
+                        }
                     }
                     return pathPoints;
                 })
@@ -240,17 +257,23 @@ master.curvechart.mouseOverEle = function(datum){
         let dateId = Math.round(mouseX / xAxisInterval) + master.date.currentStart;
         let cx = master.curvechart.xScaleByIndex(dateId);
         let cy = master.curvechart.yScale(master.utils.getCount(datum, master.curvechart.type, dateId));
-        let strokeGroup = d3.select('#strokeGroup');
-        let mark = strokeGroup.append('circle')
+        let mark = d3.select('#strokeGroup')
+            .append('circle')
             .attr('cx', cx)
             .attr('cy', cy)
             .attr('r', master.curvechart.RADIUS)
             .attr('fill', 'black');
         let textArray = [];
         textArray.push(datum);
-        textArray.push('date: ' + master.utils.id2string(dateId));
-        textArray.push(master.utils.readableType(master.curvechart.type) + ": " + master.utils.getCount(datum, master.curvechart.type));
-        master.utils.tooltip(strokeGroup, mark.node().getBoundingClientRect(), textArray);
+        textArray.push('date: ' + master.utils.id2readableString(dateId));
+        count = master.utils.getCount(datum, master.curvechart.type, dateId);
+        if (master.curvechart.type.endsWith('Rate')){
+            count = master.utils.decimalToPercent(count);
+        }
+
+        textArray.push(master.utils.readableType(master.curvechart.type) + ": ");
+        textArray.push(count);
+        master.utils.tooltip(d3.select('#curvechart'), mark.node().getBoundingClientRect(), textArray);
         const targetClass = '.' + master.utils.normalize(datum);
         master.map.mouseOverEle.call(d3.select('#map').select(targetClass).node(), null);
         master.scatterplot.mouseOverEle.call(d3.select('#scatterplot').select(targetClass).node(), null);

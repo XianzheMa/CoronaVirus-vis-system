@@ -28,7 +28,9 @@ master.utils.time2string = d3.timeFormat("%m-%d-%Y");
 master.utils.id2string = function(id){
     return master.utils.time2string(master.date.dateArray[id]);
 };
-
+master.utils.id2readableString = function(id){
+    return d3.timeFormat('%b-%d-%Y')(master.date.dateArray[id]);
+}
 
 /**
  * append a 'g' element containing a tooltip
@@ -158,4 +160,21 @@ master.utils.changeNow = function(dateId){
     d3.select('#nowDate')
         .select('#now' + dateId)
         .property('selected', true);
+}
+
+/**
+ * convert a number to its string representation in percentage form
+ * @param {number} number the number to be converted
+ */
+master.utils.decimalToPercent = function(number){
+    return (number * 100).toFixed(1) + '%';
+}
+
+/**
+ * add days to a javascript date object
+ */
+master.utils.addDays = function(date, days){
+    const copy = new Date(Number(date));
+    copy.setDate(date.getDate() + days);
+    return copy;
 }

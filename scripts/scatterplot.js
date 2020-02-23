@@ -121,7 +121,7 @@ master.scatterplot.init = function(){
             let yCount = master.utils.getCount(name, master.scatterplot.yType);
             return master.scatterplot.yScale(yCount);
         })
-        .attr('fill', function(name){
+        .attr('fill', function(name, nameIndex){
             let count = master.utils.getCount(name, master.map.type);
             return master.map.colorScale(count);
         })

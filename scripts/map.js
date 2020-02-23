@@ -90,7 +90,7 @@ master.map.setColorScale = function(){
     else{
         // for other cases, just use a linear color scale
         // first get the range
-        let initialColor = d3.interpolateReds(0);
+        let initialColor = d3.interpolateReds(0.1);
         let endColor = d3.interpolateReds(0.6);
         let interpolator = d3.interpolateRgb(initialColor, endColor);
         this.colorScale = d3.scaleSequential(interpolator)
@@ -229,9 +229,16 @@ master.map.mouseOverEle = function(datum){
 
     if(datum.available === true){
         textArray.push(master.utils.readableType(master.map.type) + ": " + master.utils.getCount(name, master.map.type));
+        textArray.push('click to select/deselect');
     }
     else{
         textArray.push(master.utils.readableType(master.map.type) + ": unavailable");
+    }
+    if(datum.available === true && master.level.name === 'China'){
+        textArray.push('double click to zoom in');
+    }
+    else if(master.level.name != 'China'){
+        textArray.push('double click to zoom out');
     }
     master.utils.tooltip(d3.select('#map'), bbox, textArray);
     // change other regions' opacity
@@ -316,7 +323,7 @@ master.map.click = function(datum){
         // dim this region's opacity
         d3.select(this)
             .transition()
-            .attr('fill', 'lightgray');
+            .attr('opacity', master.DIM_OPACITY);
     }
     else{
         // select it

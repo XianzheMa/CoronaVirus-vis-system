@@ -11,7 +11,8 @@ Chinese,English
 西双版纳州,Xishuangbanna
 未知地区,Unknown
 宿松,Susong
-内蒙古,Neimenggu
+内蒙古,Inner Mongolia
+内蒙古自治区, Inner Mongolia
 奉贤,Fengxian
 金昌,Jinchang
 钦州,Qinzhou
@@ -182,6 +183,7 @@ Chinese,English
 石柱县,Shizhuxian
 新余,Xinyu
 宣城,Xuancheng
+莱芜,Laiwu
 来宾,Laibin
 和平区,Hepingqu
 文昌,Wenchang
@@ -354,6 +356,7 @@ Chinese,English
 呼伦贝尔,Hulunbeier
 茂名,Maoming
 百色,Baise
+白山,Baishan
 海淀区,Haidianqu
 房山区,Fangshanqu
 江苏省,Jiangsu
@@ -379,12 +382,15 @@ Chinese,English
 高新区,Gaoxinqu
 未明确地区,Unknown
 宜昌,Yichang
-湘西自治州,Xiangxizizhizhou
+襄樊,Xiangfan
+湘西自治州,Xiangxi
+湘西,Xiangxi
 新乡,Xinxiang
 咸宁,Xianning
 兵团第九师,The_Ninth_Battlion
 杭州,Hangzhou
 黄浦,Huangpuqu
+东营,Dongying
 河东区,Hedongqu
 德阳,Deyang
 绍兴,Shaoxing
@@ -426,7 +432,7 @@ Chinese,English
 河北区,Hebeiqu
 西安,Xi_an
 晋中,Jinzhong
-黑龙江省,Helongjiang
+黑龙江省,Heilongjiang
 湛江,Zhanjiang
 黄石,Huangshi
 宝山,Baoshan

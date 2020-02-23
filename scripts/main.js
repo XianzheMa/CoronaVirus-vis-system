@@ -87,5 +87,5 @@ master.preprocess = function(data){
 
 d3.queue(1)
     .defer(d3.json, "./data/geojson/China.geo.json")
-    .defer(d3.json, "./data/DXYArea_short.json")
+    .defer(d3.json, "./data/DXYArea_long.json")
     .awaitAll(master.main);

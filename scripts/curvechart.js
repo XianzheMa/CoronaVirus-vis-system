@@ -2,35 +2,52 @@
  * the margin of #curvechart
  */
 master.curvechart.margin = {
-    top:30,
+    top:70,
     bottom:30,
     left:70,
     right:70
 };
 
 /**
+ * set up main title and several constants, which only need to be intialized once
+ */
+// master.curvechart.firstInitial=function(){
+//     if(master.curvechart.firstInitial.hasOwnProperty('__DONE__')){
+//         return;
+//     }
+//     master.curvechart.firstInitial.__DONE__ = true;
+    
+// }
+/**
  * initialize curvechart (mainly set up its axes)
  */
 master.curvechart.init = function(){
     'use strict';
-    this.type = 'confirmedRate';
     this.RADIUS = 2;
     this.EPSILON = 1e-8;
+    this.type = 'confirmedRate';
     let curveSvg = d3.select("#curvechart");
     // clear previous children
     curveSvg.selectAll("*").remove();
+    
     const boundingBox = curveSvg.node().getBoundingClientRect();
     let svgWidth = boundingBox.width;
     let svgHeight = boundingBox.height;
-
+    // add main title
+    d3.select('#curvechart')
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 30)
+        .attr('font-family','Arial, Helvetica, sans-serif')
+        .attr('transform', `translate(${boundingBox.width/2}, ${this.margin.top * 2/3})`)
+        .text('Coronavirus Disease Visualization System');
     let startDate = master.date.dateArray[master.date.currentStart];
     let endDate = master.date.dateArray[master.date.currentEnd];
     let tickValues = master.date.dateArray.slice(master.date.currentStart, master.date.currentEnd + 1);
     this.xScale = d3.scaleTime()
         .domain([startDate, endDate])
         .range([0, svgWidth - this.margin.right - this.margin.left])
-        .clamp(true)
-        .nice();
+        .clamp(true);
 
     let xAxisInterval = this.xScale.range()[1] / (master.date.currentEnd - master.date.currentStart);
     /**
@@ -177,7 +194,7 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
     
     d3.select('#strokeGroup')
         .selectAll('g') // select all group elements (corresponding to each name in master.utils.selectedNames)
-        .each(function(name){
+        .each(function(name, nameIndex){
             d3.select(this)
                 .append('path')
                 .datum(function(){
@@ -187,7 +204,9 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
                     let todayCount = master.utils.getCount(name, master.curvechart.type, crtdateIndex);
                     if(Math.abs(yesterDayCount - todayCount) < master.curvechart.EPSILON){
                         // just draw a horizontal line
-                        pathPoints = [yesterDayCount, yesterDayCount, todayCount, todayCount];
+                        let prev_point = master.curvechart.pointPositions.get(crtdateIndex - 1)[name];
+                        let now_point = master.curvechart.pointPositions.get(crtdateIndex)[name];
+                        pathPoints = [prev_point, prev_point, now_point, now_point];
                     }
                     else{
                         for(let dateIndex = crtdateIndex - 2; dateIndex <= crtdateIndex + 1; dateIndex++){
@@ -201,6 +220,9 @@ master.curvechart.update = function(duration, crtdateIndex = master.date.now){
                 .datum(function(){ // after generating the path using lineGen, we can abandon the path data
                     return name;
                 })
+                // .attr('stroke', function(){
+                //     return d3.schemeCategory10[nameIndex % 10];
+                // })
                 .transition()
                 .duration(duration)
                 .attrTween('stroke-dasharray', tweenDash)
@@ -273,6 +295,13 @@ master.curvechart.mouseOverEle = function(datum){
 
         textArray.push(master.utils.readableType(master.curvechart.type) + ": ");
         textArray.push(count);
+        if(master.curvechart.type.endsWith('Rate')){
+            let baseType = master.curvechart.type.slice(0, -4);
+            let countNow = master.utils.getCount(datum, baseType, dateId);
+            let countBefore = dateId >0 ? master.utils.getCount(datum, baseType, dateId - 1) : 'unavailable';
+            textArray.push(master.utils.readableType(baseType) + ': ' + countNow);
+            textArray.push(master.utils.readableType(baseType) + ' before: ' + countBefore);
+        }
         master.utils.tooltip(d3.select('#curvechart'), mark.node().getBoundingClientRect(), textArray);
         const targetClass = '.' + master.utils.normalize(datum);
         master.map.mouseOverEle.call(d3.select('#map').select(targetClass).node(), null);

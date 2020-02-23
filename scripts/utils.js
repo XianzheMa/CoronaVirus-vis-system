@@ -145,10 +145,10 @@ master.utils.getRange = function(type, start = master.date.currentStart, end = m
 
 master.utils.readableType = function(type){
     if(type.endsWith('Rate')){
-        return 'growth rate of ' + type.slice(0, -4);
+        return 'growth rate of ' + type.slice(0, -4) + ' cases';
     }
     else{
-        return 'count of ' + type;
+        return 'count of ' + type + ' cases';
     }
 }
 

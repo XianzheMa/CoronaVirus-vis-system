@@ -8,12 +8,16 @@ The recent breakout of the Coronavirus disease in Wuhan, China is deﬁnitely sh
 ## How to Use
 For now, I haven't deployed it on GitHub Pages, so you'd have to first download it to your computer and open index.html with your browser.
 
-Probably, you need to first configure your browser before seeing anything because most of current browsers block loading data locally with a XMLHttpRequest. Here is how to configure it with Firefox:
+Probably, you need to first configure your browser before seeing anything because most of current browsers block loading data locally with a XMLHttpRequest.
+
+Here is how to configure it with Firefox:
 
 1. Open the **about:config** URL in your browser. Click the "Accept the Risk and Continue" button.
 2. In the search pane, type in **privacy.file_unique_origin**. By default, it should say **true** in the row for the item.
 3. Click the button on the right side of the row; **true** should have turned into **false**.
 4. Try refreshing your page. This system should now load properly.
+
+How to configure it with Chrome can be found [here](https://stackoverflow.com/a/18137280).
 
 There are some security implications to this change if you often find yourself opening HTML files locally. If they concern you, you should toggle the setting back to its default after playing with this system. [ More details can be found here and in the corresponding CVE](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp).
 

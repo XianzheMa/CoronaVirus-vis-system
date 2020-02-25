@@ -1,6 +1,5 @@
 .ipynb_checkpoints/*
 .vscode/*
 .DS_Store
-images/*
 *.log
 write_up.*
